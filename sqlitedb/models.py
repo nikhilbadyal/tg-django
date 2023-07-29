@@ -1,8 +1,11 @@
 """Models."""
+from typing import Union
+
 from django.db import models
+from loguru import logger
 
 from manage import init_django
-from sqlitedb.utils import UserStatus
+from sqlitedb.utils import ErrorCodes, UserStatus
 
 init_django()
 
@@ -10,7 +13,32 @@ init_django()
 class UserManager(models.Manager):  # type: ignore
     """Manager for the User model."""
 
-    pass
+    def get_user(self, telegram_id: int) -> Union["User", ErrorCodes]:
+        """Retrieve a User object from the database for a given user_id. If the
+        user does not exist, create a new user.
+
+        Args:
+            telegram_id (int): The ID of the user to retrieve or create.
+
+        Returns:
+            Union[User, int]: The User object corresponding to the specified user ID, or -1 if an error occurs.
+        """
+        try:
+            user: User
+            user, created = User.objects.get_or_create(
+                telegram_id=telegram_id, defaults={"name": f"User {telegram_id}"}
+            )
+        except IndexError as e:
+            logger.error(
+                f"Unable to get or create user: {e} because of {type(e).__name__}"
+            )
+            return ErrorCodes.exceptions
+        else:
+            if created:
+                logger.info(f"Created new user {user}")
+            else:
+                logger.info(f"Retrieved existing {user}")
+        return user
 
 
 class User(models.Model):
