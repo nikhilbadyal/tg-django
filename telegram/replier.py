@@ -3,7 +3,9 @@
 from loguru import logger
 from telethon import TelegramClient
 
+from telegram.commands.help import add_help_handlers
 from telegram.commands.start import add_start_handlers
+from telegram.utils import CustomMarkdown
 
 
 class Telegram(object):
@@ -30,6 +32,7 @@ class Telegram(object):
         self.client.start(bot_token=env.str("BOT_TOKEN"))
         # Check if the connection was successful
         if self.client.is_connected():
+            self.client.parse_mode = CustomMarkdown()
             logger.info("Connected to Telegram")
             logger.info("Using bot authentication. Only bot messages are recognized.")
         else:
@@ -42,6 +45,7 @@ class Telegram(object):
 
         # Register event handlers for each command the bot can handle
         add_start_handlers(self.client)
+        add_help_handlers(self.client)
 
         # Start listening for incoming bot messages
         self.client.run_until_disconnected()

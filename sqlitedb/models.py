@@ -1,43 +1,39 @@
 """Models."""
-from typing import Union
 
 from django.db import models
-from loguru import logger
+from django.db.models import Field
+from telethon.tl.types import User as TelegramUser
 
 from manage import init_django
-from sqlitedb.utils import ErrorCodes, UserStatus
+from sqlitedb.lookups import Like
+from sqlitedb.utils import UserStatus
 
 init_django()
+
+Field.register_lookup(Like)
 
 
 class UserManager(models.Manager):  # type: ignore
     """Manager for the User model."""
 
-    def get_user(self, telegram_id: int) -> Union["User", ErrorCodes]:
+    async def get_user(self, telegram_user: TelegramUser) -> "User":
         """Retrieve a User object from the database for a given user_id. If the
         user does not exist, create a new user.
 
         Args:
-            telegram_id (int): The ID of the user to retrieve or create.
+            telegram_user (TelegramUser): The ID of the user to retrieve or create.
 
         Returns:
-            Union[User, int]: The User object corresponding to the specified user ID, or -1 if an error occurs.
+            User: The User object corresponding to the specified user ID
         """
         try:
-            user: User
-            user, created = User.objects.get_or_create(
-                telegram_id=telegram_id, defaults={"name": f"User {telegram_id}"}
+            user: User = await self.filter(telegram_id=telegram_user.id).aget()
+        except self.model.DoesNotExist:
+            user = await User.objects.acreate(
+                telegram_id=telegram_user.id,
+                **{"name": f"{telegram_user.first_name} {telegram_user.last_name}"},
             )
-        except IndexError as e:
-            logger.error(
-                f"Unable to get or create user: {e} because of {type(e).__name__}"
-            )
-            return ErrorCodes.exceptions
-        else:
-            if created:
-                logger.info(f"Created new user {user}")
-            else:
-                logger.info(f"Retrieved existing {user}")
+
         return user
 
 
