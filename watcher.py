@@ -6,7 +6,7 @@ import sys
 import time
 from typing import Any, List, Optional
 
-from watchdog.events import FileModifiedEvent, FileSystemEventHandler
+from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
 
@@ -21,7 +21,7 @@ class MyHandler(FileSystemEventHandler):
         self.excluded_directories = excluded_dir
         self.start_process()
 
-    def on_modified(self, event: FileModifiedEvent) -> None:
+    def on_modified(self, event: FileSystemEvent) -> None:
         """Called when a file is modified in the watched directory.
 
         Args:
@@ -30,8 +30,8 @@ class MyHandler(FileSystemEventHandler):
         path_components = os.path.normpath(event.src_path).split(os.path.sep)
 
         # Check if the modified file is not in the excluded directories and has a .py extension
-        if not any(
-            directory in path_components for directory in self.excluded_directories
+        if all(
+            directory not in path_components for directory in self.excluded_directories
         ) and event.src_path.endswith(".py"):
             print(f"File modified {event.src_path}, restarting...")
             self.restart_process()
