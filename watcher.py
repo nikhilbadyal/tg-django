@@ -4,20 +4,20 @@ import os
 import subprocess
 import sys
 import time
-from typing import Any, List, Optional
+from typing import Any
 
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
 
 
-class MyHandler(FileSystemEventHandler):
-    def __init__(self, excluded_dir: List[str]):
+class MyHandler(FileSystemEventHandler):  # type: ignore[misc]
+    def __init__(self, excluded_dir: list[str]) -> None:
         """Initialize the handler and start the main script process.
 
         Args:
             excluded_dir: A list of excluded directory names.
         """
-        self.process: Optional[subprocess.Popen[Any]] = None
+        self.process: subprocess.Popen[Any] | None = None
         self.excluded_directories = excluded_dir
         self.start_process()
 
@@ -30,10 +30,9 @@ class MyHandler(FileSystemEventHandler):
         path_components = os.path.normpath(event.src_path).split(os.path.sep)
 
         # Check if the modified file is not in the excluded directories and has a .py extension
-        if all(
-            directory not in path_components for directory in self.excluded_directories
-        ) and event.src_path.endswith(".py"):
-            print(f"File modified {event.src_path}, restarting...")
+        if all(directory not in path_components for directory in self.excluded_directories) and event.src_path.endswith(
+            ".py",
+        ):
             self.restart_process()
 
     def start_process(self) -> None:
@@ -57,13 +56,13 @@ if __name__ == "__main__":
 
     # Start the Observer to watch for changes in the included_directories
     observer = Observer()
-    observer.schedule(event_handler, included_directories, recursive=True)  # type: ignore
-    observer.start()  # type: ignore
+    observer.schedule(event_handler, included_directories, recursive=True)
+    observer.start()
 
     try:
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        observer.stop()  # type: ignore
+        observer.stop()
 
     observer.join()

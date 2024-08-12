@@ -13,17 +13,17 @@ init_django()
 Field.register_lookup(Like)
 
 
-class UserManager(models.Manager):  # type: ignore
+class UserManager(models.Manager):  # type: ignore[misc]
     """Manager for the User model."""
 
     async def get_user(self, telegram_user: TelegramUser) -> "User":
-        """Retrieve a User object from the database for a given user_id. If the
-        user does not exist, create a new user.
+        """Retrieve a User object from the database for a given user_id. If the user does not exist, create a new user.
 
         Args:
             telegram_user (TelegramUser): The ID of the user to retrieve or create.
 
-        Returns:
+        Returns
+        -------
             User: The User object corresponding to the specified user ID
         """
         try:
@@ -31,16 +31,17 @@ class UserManager(models.Manager):  # type: ignore
         except self.model.DoesNotExist:
             user = await User.objects.acreate(
                 telegram_id=telegram_user.id,
-                **{"name": f"{telegram_user.first_name} {telegram_user.last_name}"},
+                name=f"{telegram_user.first_name} {telegram_user.last_name}",
             )
 
         return user
 
 
-class User(models.Model):
+class User(models.Model):  # type: ignore[misc]
     """Model for storing user data.
 
-    Attributes:
+    Attributes
+    ----------
         id (int): The unique ID of the user.
         name (str or None): The name of the user, or None if no name was provided.
         telegram_id (int): The ID of the user.
@@ -54,7 +55,8 @@ class User(models.Model):
     Meta:
         db_table (str): The name of the database table used to store this model's data.
 
-    Raises:
+    Raises
+    ------
         IntegrityError: If the user's Telegram ID is not unique.
     """
 
