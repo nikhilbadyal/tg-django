@@ -9,5 +9,3 @@ T = TypeVar("T", bound=Model)
 
 class SQLiteDatabase(object):
     """SQLite database Object."""
-
-    pass

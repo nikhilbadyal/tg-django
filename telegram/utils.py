@@ -1,7 +1,7 @@
 """Utility functions."""
 
 from enum import Enum
-from typing import Any, List, Optional
+from typing import Any
 
 from loguru import logger
 from telethon import events, types
@@ -27,7 +27,9 @@ class CustomMarkdown:
                     entities[i] = types.MessageEntitySpoiler(e.offset, e.length)
                 elif e.url.startswith("emoji/"):
                     entities[i] = types.MessageEntityCustomEmoji(
-                        e.offset, e.length, int(e.url.split("/")[1])
+                        e.offset,
+                        e.length,
+                        int(e.url.split("/")[1]),
                     )
         return text, entities
 
@@ -37,7 +39,9 @@ class CustomMarkdown:
         for i, e in enumerate(entities or []):
             if isinstance(e, types.MessageEntityCustomEmoji):
                 entities[i] = types.MessageEntityTextUrl(
-                    e.offset, e.length, f"emoji/{e.document_id}"
+                    e.offset,
+                    e.length,
+                    f"emoji/{e.document_id}",
                 )
             if isinstance(e, types.MessageEntitySpoiler):
                 entities[i] = types.MessageEntityTextUrl(e.offset, e.length, "spoiler")
@@ -52,10 +56,11 @@ class SupportedCommands(Enum):
     HELP: str = "/help"
 
     @classmethod
-    def get_values(cls) -> List[str]:
+    def get_values(cls) -> list[str]:
         """Returns a list of all the values of the SupportedCommands enum.
 
-        Returns:
+        Returns
+        -------
             list: A list of all the values of the SupportedCommands enum.
         """
         return [command.value for command in cls]
@@ -63,7 +68,8 @@ class SupportedCommands(Enum):
     def __str__(self) -> str:
         """Returns the string representation of the enum value.
 
-        Returns:
+        Returns
+        -------
             str: The string representation of the enum value.
         """
         return self.value
@@ -75,7 +81,8 @@ async def get_telegram_user(event: events.NewMessage.Event) -> TelegramUser:
     Args:
         event (events.NewMessage.Event): The message event.
 
-    Returns:
+    Returns
+    -------
         User: The User entity associated with the message event.
     """
     try:
@@ -88,15 +95,14 @@ async def get_telegram_user(event: events.NewMessage.Event) -> TelegramUser:
 
 
 def get_regex() -> str:
-    """Generate a regex pattern that matches any message that is not a
-    supported command.
+    """Generate a regex pattern that matches any message that is not a supported command.
 
-    Returns:
+    Returns
+    -------
         str: A regex pattern as a string.
     """
     # Exclude any message that starts with one of the supported commands using negative lookahead
-    pattern = r"^(?!(%s))[/].*" % "|".join(SupportedCommands.get_values())
-    return pattern
+    return r"^(?!({}))[/].*".format("|".join(SupportedCommands.get_values()))
 
 
 class UserSettings(Enum):
@@ -104,23 +110,24 @@ class UserSettings(Enum):
 
     PAGE_SIZE = "page_size", "The number of records displayed per page."
 
-    def __new__(cls, *args: Any, **kwds: Any) -> "UserSettings":
+    def __new__(cls, *args: Any, **kwds: Any) -> "UserSettings":  # noqa: ARG003
         obj = object.__new__(cls)
         obj._value_ = args[0]
         return obj
 
     # ignore the first param since it's already set by __new__
-    def __init__(self, _: str, description: Optional[str] = None):
+    def __init__(self, _: str, description: str | None = None) -> None:
         self._description_ = description
 
     def __str__(self) -> str:
         return str(self.value)
 
     @property
-    def description(self) -> Optional[str]:
+    def description(self) -> str | None:
         """Returns the description of the setting.
 
-        Returns:
+        Returns
+        -------
             Optional[str]: The description of the setting.
         """
         return self._description_
@@ -129,8 +136,7 @@ class UserSettings(Enum):
 async def get_user(event: events.NewMessage.Event) -> User:
     """Get out user from telegram user."""
     telegram_user: TelegramUser = await get_telegram_user(event)
-    user = await User.objects.get_user(telegram_user=telegram_user)
-    return user
+    return await User.objects.get_user(telegram_user=telegram_user)
 
 
 def command_help(command: str) -> str:
