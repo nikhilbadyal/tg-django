@@ -1,7 +1,10 @@
 """Models."""
 
+from typing import Self
+
 from django.db import models
 from django.db.models import Field
+from telethon.tl.types import Channel
 from telethon.tl.types import User as TelegramUser
 
 from manage import init_django
@@ -16,7 +19,7 @@ Field.register_lookup(Like)
 class UserManager(models.Manager):  # type: ignore[misc]
     """Manager for the User model."""
 
-    async def get_user(self, telegram_user: TelegramUser) -> "User":
+    async def get_user(self: Self, telegram_user: TelegramUser | Channel) -> "User":
         """Retrieve a User object from the database for a given user_id. If the user does not exist, create a new user.
 
         Args:
@@ -27,12 +30,19 @@ class UserManager(models.Manager):  # type: ignore[misc]
             User: The User object corresponding to the specified user ID
         """
         try:
+
+            # https://github.com/typeddjango/django-stubs/issues/1493
             user: User = await self.filter(telegram_id=telegram_user.id).aget()
         except self.model.DoesNotExist:
-            user = await User.objects.acreate(
-                telegram_id=telegram_user.id,
-                name=f"{telegram_user.first_name} {telegram_user.last_name}",
-            )
+            if isinstance(telegram_user, Channel):
+                name = telegram_user.title
+            else:
+                name = f"{telegram_user.first_name} {telegram_user.last_name}"
+            user_dict = {
+                "telegram_id": telegram_user.id,
+                "name": name,
+            }
+            user = await User.objects.acreate(**user_dict)
 
         return user
 
@@ -89,9 +99,10 @@ class User(models.Model):  # type: ignore[misc]
     objects = UserManager()
 
     class Meta:
-        # Database table name
+        """Database table name."""
+
         db_table = "user"
 
-    def __str__(self) -> str:
+    def __str__(self: Self) -> str:
         """Return a string representation of the user object."""
         return f"User(id={self.id}, name={self.name}, telegram_id={self.telegram_id}, status={self.status})"
