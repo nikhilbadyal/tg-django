@@ -9,7 +9,7 @@ from telethon.tl.types import User as TelegramUser
 
 from manage import init_django
 from sqlitedb.lookups import Like
-from sqlitedb.utils import UserStatus
+from sqlitedb.utils import UserStatus, UserType
 
 init_django()
 
@@ -35,12 +35,15 @@ class UserManager(models.Manager):  # type: ignore[misc]
             user: User = await self.filter(telegram_id=telegram_user.id).aget()
         except self.model.DoesNotExist:
             if isinstance(telegram_user, Channel):
+                user_type = UserType.GROUP.value if telegram_user.megagroup else UserType.CHANNEL.value
                 name = telegram_user.title
             else:
                 name = f"{telegram_user.first_name} {telegram_user.last_name}"
+                user_type = UserType.USER.value
             user_dict = {
                 "telegram_id": telegram_user.id,
                 "name": name,
+                "user_type": user_type,
             }
             user = await User.objects.acreate(**user_dict)
 
@@ -94,6 +97,11 @@ class User(models.Model):  # type: ignore[misc]
 
     # Conversation settings, stored as a JSON object
     settings = models.JSONField(default=dict)
+
+    user_type = models.CharField(
+        max_length=20,
+        choices=[(user_type.value, user_type.name) for user_type in UserType],
+    )
 
     # Use custom manager for this model
     objects = UserManager()

@@ -15,3 +15,11 @@ class ErrorCodes(Enum):
     """List of error codes."""
 
     exceptions = -1
+
+
+class UserType(Enum):
+    """User type."""
+
+    USER = "user"
+    CHANNEL = "channel"
+    GROUP = "group"
