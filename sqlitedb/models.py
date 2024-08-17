@@ -67,7 +67,7 @@ class User(models.Model):  # type: ignore[misc]
     name = models.CharField(max_length=255, blank=True)
 
     # User Telegram ID, integer
-    telegram_id = models.IntegerField(unique=True)
+    telegram_id = models.BigIntegerField(unique=True)
 
     # State of the user
     status = models.CharField(
