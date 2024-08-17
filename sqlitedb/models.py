@@ -2,6 +2,7 @@
 
 from typing import Self
 
+from django.core.cache import cache
 from django.db import models
 from django.db.models import Field
 from telethon.tl.types import Channel
@@ -30,9 +31,13 @@ class UserManager(models.Manager):  # type: ignore[misc]
             User: The User object corresponding to the specified user ID
         """
         try:
+            user: User = cache.get(telegram_user.id)
 
-            # https://github.com/typeddjango/django-stubs/issues/1493
-            user: User = await self.filter(telegram_id=telegram_user.id).aget()
+            if not user:
+                # https://github.com/typeddjango/django-stubs/issues/1493
+                user = await self.filter(telegram_id=telegram_user.id).aget()
+                cache.set(telegram_user.id, user)
+
         except self.model.DoesNotExist:
             if isinstance(telegram_user, Channel):
                 user_type = UserType.GROUP.value if telegram_user.megagroup else UserType.CHANNEL.value
@@ -46,6 +51,7 @@ class UserManager(models.Manager):  # type: ignore[misc]
                 "user_type": user_type,
             }
             user = await User.objects.acreate(**user_dict)
+            cache.set(telegram_user.id, user)
 
         return user
 

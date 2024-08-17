@@ -20,12 +20,15 @@ def init_django() -> None:
 
     if settings.configured:
         return
+    project_key = env.str("PROJECT_KEY")
+    default_cache_url = f"locmemcache://{project_key}?TIMEOUT=86400&KEY_PREFIX=url_bypass"
     settings.configure(
         DEFAULT_AUTO_FIELD="django.db.models.BigAutoField",
         INSTALLED_APPS=[
             "sqlitedb",
         ],
         DATABASES={"default": env.db("DATABASE_URL")},
+        CACHES={"default": env.cache("CACHE_URL", default=default_cache_url)},
     )
     django.setup()
 
