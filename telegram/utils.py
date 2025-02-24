@@ -110,7 +110,7 @@ class UserSettings(Enum):
 
     PAGE_SIZE = "page_size", "The number of records displayed per page."
 
-    def __new__(cls, *args: Any, **kwds: Any) -> "UserSettings":  # noqa: ARG003
+    def __new__(cls, *args: Any, **kwds: Any) -> "UserSettings":
         obj = object.__new__(cls)
         obj._value_ = args[0]
         return obj
