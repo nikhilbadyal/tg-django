@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 from pathlib import Path
 
+import django
 import environ
+from django.conf import settings
 
 
 def init_django() -> None:
@@ -11,9 +13,6 @@ def init_django() -> None:
     database and the `sqlitedb` app. If the settings have already been
     configured, this function does nothing.
     """
-    import django
-    from django.conf import settings
-
     env = environ.Env()
     base_dir = Path(__file__).resolve().parent
     environ.Env.read_env(Path(base_dir, ".env"))
