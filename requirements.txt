@@ -1,13 +1,13 @@
-django==5.2.1
+django==5.2.7
 django-environ==0.12.0
-environs==14.1.1
+environs==14.3.0
 loguru==0.7.3
-pre-commit==4.2.0
-psycopg2-binary==2.9.10 # https://github.com/psycopg/psycopg2
-pytest-cov==6.1.1 #https://github.com/pytest-dev/pytest-cov
+pre-commit==4.3.0
+psycopg2-binary==2.9.11 # https://github.com/psycopg/psycopg2
+pytest-cov==7.0.0 #https://github.com/pytest-dev/pytest-cov
 pytest-django==4.11.1
 pytest-html==4.1.1  #https://github.com/pytest-dev/pytest-html
-pytest-sugar==1.0.0 # https://github.com/Frozenball/pytest-sugar
-requests==2.32.4
-telethon==1.40.0 #https://github.com/LonamiWebs/Telethon
+pytest-sugar==1.1.1 # https://github.com/Frozenball/pytest-sugar
+requests==2.32.5
+telethon==1.41.2 #https://github.com/LonamiWebs/Telethon
 watchdog==6.0.0 #https://github.com/gorakhargosh/watchdog

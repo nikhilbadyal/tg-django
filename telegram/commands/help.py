@@ -1,56 +1,102 @@
 """Handle help command."""
 
-# Import necessary libraries and modules
-from telethon import TelegramClient, events
+from telethon import events
 
+from telegram.commands.base import BaseCommand, CommandRegistry
 from telegram.strings import command_not_found, docs_not_found
+from telegram.utils import SupportedCommands
 
-# Import some helper functions
-from telegram.utils import SupportedCommands, command_help
 
-help_message = """
-Hey there,Welcome to the Help Center
+@CommandRegistry.register("help")
+class HelpCommand(BaseCommand):
+    """Handle /help command."""
+
+    def get_pattern(self) -> str:
+        """Return the regex pattern for /help command.
+
+        Returns
+        -------
+            Regex pattern string
+        """
+        return f"^{SupportedCommands.HELP.value}(.*)"
+
+    def get_usage(self) -> str:
+        """Return the usage documentation for /help command.
+
+        Returns
+        -------
+            Usage documentation string
+        """
+        return "Really bro🥸."
+
+    def _get_help_message(self) -> str:
+        """Generate the main help message dynamically from registered commands.
+
+        Returns
+        -------
+            Formatted help message string
+        """
+        commands = CommandRegistry.get_all_commands()
+        command_list = []
+
+        for idx, (cmd_name, _) in enumerate(commands.items(), start=1):
+            command_list.append(f"{idx}. `/{cmd_name}`: Start using the bot (usage: `/{cmd_name}`).")
+
+        command_lines = "\n".join(command_list)
+
+        return f"""
+Hey there, Welcome to the Help Center
 
 Here's a list of supported commands:
 
-1. `/start`: Start using the bot (usage: `/start`).
+{command_lines}
 
 For more information on each command, type `/help <command>`.
 
 If you have any questions or need assistance, feel free to ask. Happy botting!
 """
 
+    def _get_command_usage(self, command_name: str) -> str:
+        """Get usage documentation for a specific command.
 
-def add_help_handlers(client: TelegramClient) -> None:
-    """Add /help command Event Handler."""
-    client.add_event_handler(handle_help_message)
+        Args:
+            command_name: Name of the command (without the '/' prefix)
 
+        Returns
+        -------
+            Usage documentation string
 
-def help_usage() -> str:
-    """Return the usage of add command."""
-    return "Really bro🥸."
+        Raises
+        ------
+            KeyError: If command is not found in registry
+        """
+        command_class = CommandRegistry.get_command(command_name)
+        if command_class is None:
+            msg = f"Command '{command_name}' not found in registry"
+            raise KeyError(msg)
 
+        # Instantiate the command with env (needed for get_usage)
+        command_instance = command_class(self.env)
+        return command_instance.get_usage()
 
-# Register the function to handle the /help command
-@events.register(events.NewMessage(pattern=f"^{SupportedCommands.HELP.value}(.*)"))  # type: ignore[misc]
-async def handle_help_message(event: events.NewMessage.Event) -> None:
-    """Handle /help command.
+    async def handle(self, event: events.NewMessage.Event) -> None:
+        """Handle /help command.
 
-    Args:
-        event (events.NewMessage.Event): A new message event.
+        Args:
+            event: A new message event.
+        """
+        data = event.pattern_match.group(1).strip()
 
-    Returns
-    -------
-        None: This function doesn't return anything.
-    """
-    data = event.pattern_match.group(1).strip()
-    if not data:
-        await event.reply(help_message)
-    elif f"/{data}" not in SupportedCommands.get_values():
-        await event.reply(command_not_found)
-    else:
-        try:
-            usage = command_help(data)
-            await event.reply(usage)
-        except KeyError:
-            await event.reply(docs_not_found)
+        if not data:
+            # Show general help message
+            await event.reply(self._get_help_message())
+        elif f"/{data}" not in SupportedCommands.get_values():
+            # Command not supported
+            await event.reply(command_not_found)
+        else:
+            # Show specific command usage
+            try:
+                usage = self._get_command_usage(data)
+                await event.reply(usage)
+            except KeyError:
+                await event.reply(docs_not_found)

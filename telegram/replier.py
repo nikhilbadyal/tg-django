@@ -2,24 +2,29 @@
 
 import sys
 
+from environs import Env
 from loguru import logger
 from telethon import TelegramClient
 
-from telegram.commands.help import add_help_handlers
-from telegram.commands.start import add_start_handlers
+# Import command modules to trigger registration
+# These imports trigger the @CommandRegistry.register decorators
+import telegram.commands.help
+import telegram.commands.start  # noqa: F401
+from telegram.commands.base import CommandRegistry
 from telegram.utils import CustomMarkdown
 
 
 class Telegram(object):
     """A class representing a Telegram bot."""
 
-    def __init__(self, session_file: str) -> None:
+    def __init__(self, session_file: str, env: Env) -> None:
         """Create a new Telegram object and connect to the Telegram API using the given session file.
 
         Args:
-            session_file (str): The path to the session file to use for connecting to the Telegram API.
+            session_file: The path to the session file to use for connecting to the Telegram API.
+            env: Environment configuration object.
         """
-        from main import env  # noqa: PLC0415
+        self.env = env
 
         # Create a new TelegramClient instance with the given session file and API credentials
         self.client: TelegramClient = TelegramClient(
@@ -42,9 +47,15 @@ class Telegram(object):
 
     def bot_listener(self) -> None:
         """Listen for incoming bot messages and handle them based on the command."""
-        # Register event handlers for each command the bot can handle
-        add_start_handlers(self.client)
-        add_help_handlers(self.client)
+        # Automatically register all commands from the registry
+        commands = CommandRegistry.get_all_commands()
+        logger.info(f"Registering {len(commands)} commands: {list(commands.keys())}")
+
+        for command_name, command_class in commands.items():
+            # Instantiate each command with env and register its handler
+            command_instance = command_class(self.env)
+            command_instance.add_handler(self.client)
+            logger.debug(f"Registered handler for /{command_name}")
 
         # Start listening for incoming bot messages
         self.client.run_until_disconnected()

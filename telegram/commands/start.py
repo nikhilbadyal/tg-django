@@ -1,35 +1,40 @@
 """Handle start command."""
 
-# Import necessary libraries and modules
-from telethon import TelegramClient, events
+from telethon import events
 
-# Import some helper functions
+from telegram.commands.base import BaseCommand, CommandRegistry
 from telegram.utils import SupportedCommands, get_user
 
 
-def add_start_handlers(client: TelegramClient) -> None:
-    """Add /start command Event Handler."""
-    client.add_event_handler(handle_start_message)
+@CommandRegistry.register("start")
+class StartCommand(BaseCommand):
+    """Handle /start command."""
 
+    def get_pattern(self) -> str:
+        """Return the regex pattern for /start command.
 
-def start_usage() -> str:
-    """Return the usage of add command."""
-    return "It can be used to check if bot is alive or dead.\n"
+        Returns
+        -------
+            Regex pattern string
+        """
+        return f"^{SupportedCommands.START.value}$"
 
+    def get_usage(self) -> str:
+        """Return the usage documentation for /start command.
 
-# Register the function to handle the /start command
-@events.register(events.NewMessage(pattern=f"^{SupportedCommands.START.value}$"))  # type: ignore[misc]
-async def handle_start_message(event: events.NewMessage.Event) -> None:
-    """Handle /start command.
+        Returns
+        -------
+            Usage documentation string
+        """
+        return "It can be used to check if bot is alive or dead.\n"
 
-    Args:
-        event (events.NewMessage.Event): A new message event.
+    async def handle(self, event: events.NewMessage.Event) -> None:
+        """Handle /start command.
 
-    Returns
-    -------
-        None: This function doesn't return anything.
-    """
-    # Get the user associated with the message
-    user = await get_user(event)
-    result = f"Hii👋, {user.name} {user.telegram_id}"
-    await event.reply(result)
+        Args:
+            event: A new message event.
+        """
+        # Get the user associated with the message
+        user = await get_user(event)
+        result = f"Hii👋, {user.name} {user.telegram_id}"
+        await event.reply(result)

@@ -137,15 +137,3 @@ async def get_user(event: events.NewMessage.Event) -> User:
     """Get out user from telegram user."""
     telegram_user: TelegramUser = await get_telegram_user(event)
     return await User.objects.get_user(telegram_user=telegram_user)
-
-
-def command_help(command: str) -> str:
-    """Return func for command helper."""
-    from telegram.commands.help import help_usage  # noqa: PLC0415
-    from telegram.commands.start import start_usage  # noqa: PLC0415
-
-    mapper = {
-        "start": start_usage(),
-        "help": help_usage(),
-    }
-    return mapper[command]
