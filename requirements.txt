@@ -5,7 +5,7 @@ loguru==0.7.3
 pre-commit==4.6.0
 psycopg2-binary==2.9.12 # https://github.com/psycopg/psycopg2
 pytest-cov==7.1.0 #https://github.com/pytest-dev/pytest-cov
-pytest-django==4.11.1
+pytest-django==4.12.0
 pytest-html==4.1.1  #https://github.com/pytest-dev/pytest-html
 pytest-sugar==1.1.1 # https://github.com/Frozenball/pytest-sugar
 requests==2.33.1
